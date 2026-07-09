@@ -123,88 +123,69 @@ Ouvrir ensuite :
 http://127.0.0.1:8000
 ```
 
-## Deploiement InfinityFree
+## Deploiement Railway
 
-InfinityFree est un hebergement mutualise PHP/MySQL avec publication par FTP. Le deploiement doit donc etre prepare localement, puis envoye sur le serveur avec les dependances deja installees.
+Railway detecte automatiquement les applications Laravel et les sert via PHP-FPM/Caddy. Le projet contient une configuration `railway.json` pour encadrer le build et les actions avant demarrage.
 
-Le projet est verrouille sur PHP `8.3.32` via Composer afin de rester compatible avec InfinityFree et avec les dependances Laravel actuelles.
+Fichiers Railway ajoutes :
 
-Avant upload, generer le projet en local :
+- `railway.json` : utilise Railpack, lance `npm run build`, puis le script de pre-deploiement.
+- `railway/init-app.sh` : vide les caches Laravel, lance les migrations, cree le lien `storage` et seed les donnees de demo si la base est vide.
+
+Railway peut deployer depuis GitHub :
+
+1. Creer un projet Railway.
+2. Ajouter un service MySQL Railway.
+3. Ajouter un service depuis le repository GitHub.
+4. Generer un domaine public dans l'onglet `Networking`.
+5. Configurer les variables d'environnement ci-dessous.
+
+Railway peut aussi deployer en CLI :
 
 ```bash
-composer install --no-dev --optimize-autoloader
-npm run build
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
+railway init
+railway up
 ```
 
-Structure FTP recommandee :
-
-```text
-/
-├── htdocs/
-│   ├── index.php
-│   ├── .htaccess
-│   ├── build/
-│   ├── storage/
-│   ├── favicon.ico
-│   └── robots.txt
-└── leboncoin/
-    ├── app/
-    ├── bootstrap/
-    ├── config/
-    ├── database/
-    ├── resources/
-    ├── routes/
-    ├── storage/
-    ├── vendor/
-    ├── .env
-    ├── artisan
-    ├── composer.json
-    └── composer.lock
-```
-
-Copier dans `/htdocs` :
-
-- le contenu de `public/build` apres `npm run build`;
-- `public/favicon.ico` et `public/robots.txt`;
-- les fichiers fournis dans `infinityfree/htdocs`.
-
-Copier le reste du projet dans `/leboncoin`, sans le dossier `node_modules`. Le dossier `vendor` doit etre present, car InfinityFree ne doit pas executer Composer en production.
-
-Configurer le fichier `/leboncoin/.env` :
+Variables minimales pour le service Laravel :
 
 ```env
 APP_ENV=production
 APP_DEBUG=false
 APP_KEY=base64:...
-APP_URL=https://votre-domaine.infinityfreeapp.com
+APP_URL=https://votre-domaine.up.railway.app
+LOG_CHANNEL=stderr
 FILESYSTEM_DISK=public
-PUBLIC_DISK_ROOT=/chemin/absolu/vers/htdocs/storage
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 ```
 
-Configurer aussi les variables MySQL fournies par InfinityFree :
+Variables MySQL avec un service MySQL Railway :
 
 ```env
 DB_CONNECTION=mysql
-DB_HOST=...
-DB_PORT=3306
-DB_DATABASE=...
-DB_USERNAME=...
-DB_PASSWORD=...
+DB_HOST=${{MySQL.MYSQLHOST}}
+DB_PORT=${{MySQL.MYSQLPORT}}
+DB_DATABASE=${{MySQL.MYSQLDATABASE}}
+DB_USERNAME=${{MySQL.MYSQLUSER}}
+DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 ```
 
-Les migrations ne peuvent pas etre lancees automatiquement si aucun acces SSH n'est disponible. Les executer localement sur une base equivalente, exporter le SQL, puis l'importer dans phpMyAdmin InfinityFree. La commande suivante reste disponible sur un environnement qui permet Artisan :
+Le pre-deploiement execute automatiquement :
 
 ```bash
 php artisan app:deploy-prepare --seed-demo
 ```
 
-Point important : garder `.env`, `vendor`, `storage`, `database` et le code applicatif hors du dossier public `htdocs`. Seuls le front controller, les assets publics et le dossier `storage` public doivent etre exposes.
+Cette commande :
+
+- lance les migrations avec `--force`;
+- tente de creer le lien public `storage`;
+- cree les donnees de demonstration uniquement si la base ne contient encore aucune donnee applicative;
+- evite de reseeder la base a chaque redeploiement.
+
+Point important : le disque local Railway est ephemere. Les images uploadees peuvent etre perdues au redeploiement si aucun volume ou stockage externe n'est configure. Pour une vraie production, utiliser un volume Railway monte sur `storage`, ou migrer les images vers un stockage objet compatible S3.
 
 ## Routes principales
 
