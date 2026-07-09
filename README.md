@@ -161,6 +161,14 @@ QUEUE_CONNECTION=database
 CACHE_STORE=database
 ```
 
+Generer `APP_KEY` en local puis copier la valeur dans les variables Railway :
+
+```bash
+php artisan key:generate --show
+```
+
+Ne pas laisser Railway sans `APP_KEY` : Laravel refusera de servir les pages avec l'erreur `No application encryption key has been specified`. Ne pas regenerer cette cle a chaque redeploiement, car elle protege les cookies, sessions et donnees chiffrees.
+
 Variables MySQL avec un service MySQL Railway :
 
 ```env
