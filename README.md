@@ -151,7 +151,7 @@ Un script Composer est aussi disponible :
 composer deploy-prepare
 ```
 
-Pour Netlify, ne pas publier ce projet Laravel directement avec `public` comme dossier de publication : les routes Blade, l'authentification et les formulaires ne fonctionneraient pas, car Netlify ne lance pas le runtime PHP/Laravel.
+Pour Netlify, ne pas publier ce projet Laravel directement avec `public` comme dossier de publication : Netlify cherche un fichier `index.html` et ne lance pas `public/index.php`. Cela provoquerait une page 404 a la racine. Le fichier `netlify.toml` publie donc le dossier `netlify`, qui contient une page statique d'aperçu et une regle de fallback.
 
 Un fichier `netlify.toml` est present pour encadrer le build Netlify. La plateforme supporte actuellement PHP jusqu'a `8.3` sur son image de build. Le projet verrouille donc aussi la plateforme Composer sur PHP `8.3.32` afin que `composer.lock` reste compatible avec Netlify et les hebergeurs PHP 8.3.
 
