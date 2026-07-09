@@ -193,6 +193,14 @@ DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 
 Si Railway a deja deploye avec SQLite, creer un service MySQL Railway, remplacer les variables ci-dessus, puis redeployer. Le script `railway/init-app.sh` refuse maintenant `DB_CONNECTION=sqlite` afin d'eviter un seed non persistant ou incoherent.
 
+Pour relancer manuellement les migrations et le seed demo depuis Railway apres correction des variables :
+
+```bash
+railway run php artisan app:deploy-prepare --seed-demo
+```
+
+Le seed demo est idempotent : il peut etre relance pour completer une base vide ou partiellement initialisee sans recreer les memes utilisateurs, annonces et images.
+
 Le pre-deploiement execute automatiquement :
 
 ```bash
@@ -203,8 +211,8 @@ Cette commande :
 
 - lance les migrations avec `--force`;
 - tente de creer le lien public `storage`;
-- cree les donnees de demonstration uniquement si la base ne contient encore aucune donnee applicative;
-- evite de reseeder la base a chaque redeploiement.
+- cree ou complete les donnees de demonstration;
+- affiche les compteurs `users`, `categories`, `annonces` et `images` avant et apres le seed.
 
 Point important : le disque local Railway est ephemere. Les images uploadees peuvent etre perdues au redeploiement si aucun volume ou stockage externe n'est configure. Pour une vraie production, utiliser un volume Railway monte sur `storage`, ou migrer les images vers un stockage objet compatible S3.
 

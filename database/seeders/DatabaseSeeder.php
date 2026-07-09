@@ -75,18 +75,21 @@ class DatabaseSeeder extends Seeder
                     ? $users->where('id', '!=', $seller->id)->values()->get(($sellerIndex + $index) % 49)
                     : null;
 
-                $annonce = Annonce::create([
+                $name = $annonceNames->get(($sellerIndex + $index) % $annonceNames->count()).' #'.($sellerIndex + 1).'-'.($index + 1);
+
+                $annonce = Annonce::firstOrCreate([
                     'seller_id' => $seller->id,
+                    'name' => $name,
+                ], [
                     'buyer_id' => $buyer?->id,
                     'category_id' => $categories->get(($sellerIndex + $index) % $categories->count())->id,
-                    'name' => $annonceNames->get(($sellerIndex + $index) % $annonceNames->count()).' #'.($sellerIndex + 1).'-'.($index + 1),
                     'price' => 10 + (($sellerIndex + 1) * ($index + 2) * 3),
                     'description' => 'Annonce de demonstration generee automatiquement pour presenter les fonctionnalites de la marketplace.',
                     'status' => $isSold,
                 ]);
 
                 foreach (range(1, (($sellerIndex + $index) % 5) + 1) as $imageIndex) {
-                    $annonce->images()->create([
+                    $annonce->images()->firstOrCreate([
                         'url' => "https://picsum.photos/seed/annonce-{$annonce->id}-{$imageIndex}/800/600",
                     ]);
                 }
