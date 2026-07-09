@@ -153,14 +153,15 @@ composer deploy-prepare
 
 Pour Netlify, ne pas publier ce projet Laravel directement avec `public` comme dossier de publication : les routes Blade, l'authentification et les formulaires ne fonctionneraient pas, car Netlify ne lance pas le runtime PHP/Laravel.
 
-Un fichier `netlify.toml` est present pour eviter l'erreur de build Composer liee a la version PHP. Le `composer.lock` actuel contient des dependances Symfony/Laravel qui demandent PHP `>=8.4.1`, alors que Netlify peut utiliser PHP `8.3` par defaut. La configuration force donc PHP `8.4` pendant le build :
+Un fichier `netlify.toml` est present pour encadrer le build Netlify. La plateforme supporte actuellement PHP jusqu'a `8.3` sur son image de build, alors que le `composer.lock` actuel contient des dependances Symfony/Laravel qui demandent PHP `>=8.4.1`.
 
 ```toml
 [build.environment]
-  PHP_VERSION = "8.4"
+  PHP_VERSION = "8.3"
+  COMPOSER_IGNORE_PLATFORM_REQ = "php"
 ```
 
-Cette configuration permet de corriger l'installation des dependances pendant le build Netlify, mais elle ne rend pas Laravel executable sur Netlify en production.
+Cette configuration vise uniquement a laisser Netlify construire les assets frontend. Elle ignore la contrainte PHP pendant l'installation Composer, ce qui n'est acceptable ici que parce que Netlify ne doit pas executer Laravel en production. Le correctif durable pour un backend PHP 8.3 consiste a regenerer `composer.lock` avec des dependances Symfony compatibles PHP 8.3, ou a deployer Laravel sur un hebergeur PHP qui supporte PHP 8.4.
 
 Si un frontend separe est cree plus tard pour Netlify, il devra appeler l'API Laravel via une URL publique :
 
