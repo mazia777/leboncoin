@@ -123,65 +123,71 @@ Ouvrir ensuite :
 http://127.0.0.1:8000
 ```
 
-## Deploiement Netlify
+## Deploiement InfinityFree
 
-Netlify est adapte aux frontends statiques, aux applications JavaScript modernes et aux fonctions serverless. Ce projet est actuellement une application Laravel avec rendu Blade, authentification, base de donnees, sessions et uploads d'images. Il ne peut donc pas etre execute directement sur Netlify comme une application PHP complete.
+InfinityFree est un hebergement mutualise PHP/MySQL avec publication par FTP. Le deploiement doit donc etre prepare localement, puis envoye sur le serveur avec les dependances deja installees.
 
-Le plan recommande est une architecture en deux parties :
+Le projet est verrouille sur PHP `8.3.32` via Composer afin de rester compatible avec InfinityFree et avec les dependances Laravel actuelles.
 
-- Netlify pour un futur frontend statique ou SPA ;
-- un hebergeur compatible PHP/Laravel pour le backend, la base de donnees, les sessions, les uploads et les migrations.
-
-Le backend Laravel conserve une commande de preparation production :
+Avant upload, generer le projet en local :
 
 ```bash
-php artisan app:deploy-prepare --seed-demo
+composer install --no-dev --optimize-autoloader
+npm run build
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 ```
 
-Cette commande :
+Structure FTP recommandee :
 
-- lance les migrations avec `--force`;
-- tente de creer le lien public `storage`;
-- cree les donnees de demonstration uniquement si la base ne contient encore aucune donnee applicative;
-- evite de reseeder la base a chaque redeploiement.
-
-Un script Composer est aussi disponible :
-
-```bash
-composer deploy-prepare
+```text
+/
+├── htdocs/
+│   ├── index.php
+│   ├── .htaccess
+│   ├── build/
+│   ├── storage/
+│   ├── favicon.ico
+│   └── robots.txt
+└── leboncoin/
+    ├── app/
+    ├── bootstrap/
+    ├── config/
+    ├── database/
+    ├── resources/
+    ├── routes/
+    ├── storage/
+    ├── vendor/
+    ├── .env
+    ├── artisan
+    ├── composer.json
+    └── composer.lock
 ```
 
-Pour Netlify, ne pas publier ce projet Laravel directement avec `public` comme dossier de publication : Netlify cherche un fichier `index.html` et ne lance pas `public/index.php`. Cela provoquerait une page 404 a la racine. Le fichier `netlify.toml` publie donc le dossier `netlify`, qui contient une page statique d'aperçu et une regle de fallback.
+Copier dans `/htdocs` :
 
-Un fichier `netlify.toml` est present pour encadrer le build Netlify. La plateforme supporte actuellement PHP jusqu'a `8.3` sur son image de build. Le projet verrouille donc aussi la plateforme Composer sur PHP `8.3.32` afin que `composer.lock` reste compatible avec Netlify et les hebergeurs PHP 8.3.
+- le contenu de `public/build` apres `npm run build`;
+- `public/favicon.ico` et `public/robots.txt`;
+- les fichiers fournis dans `infinityfree/htdocs`.
 
-```toml
-[build.environment]
-  PHP_VERSION = "8.3"
-```
+Copier le reste du projet dans `/leboncoin`, sans le dossier `node_modules`. Le dossier `vendor` doit etre present, car InfinityFree ne doit pas executer Composer en production.
 
-Cette configuration vise uniquement a laisser Netlify construire les assets frontend. Elle ne rend pas Laravel executable sur Netlify en production.
-
-Si un frontend separe est cree plus tard pour Netlify, il devra appeler l'API Laravel via une URL publique :
-
-```env
-VITE_API_URL=https://api.votre-domaine.com
-```
-
-Le backend Laravel devra etre deploye sur un environnement PHP avec au minimum :
+Configurer le fichier `/leboncoin/.env` :
 
 ```env
 APP_ENV=production
 APP_DEBUG=false
 APP_KEY=base64:...
-APP_URL=https://api.votre-domaine.com
+APP_URL=https://votre-domaine.infinityfreeapp.com
 FILESYSTEM_DISK=public
+PUBLIC_DISK_ROOT=/chemin/absolu/vers/htdocs/storage
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 ```
 
-Configurer aussi les variables de base de donnees du backend :
+Configurer aussi les variables MySQL fournies par InfinityFree :
 
 ```env
 DB_CONNECTION=mysql
@@ -192,7 +198,13 @@ DB_USERNAME=...
 DB_PASSWORD=...
 ```
 
-Point important : les images uploadees sont stockees sur le disque local Laravel. Sur une plateforme cloud, ce stockage peut etre ephemere selon la configuration. Pour une production reelle, il faudra migrer les images vers un stockage persistant compatible S3 ou equivalent.
+Les migrations ne peuvent pas etre lancees automatiquement si aucun acces SSH n'est disponible. Les executer localement sur une base equivalente, exporter le SQL, puis l'importer dans phpMyAdmin InfinityFree. La commande suivante reste disponible sur un environnement qui permet Artisan :
+
+```bash
+php artisan app:deploy-prepare --seed-demo
+```
+
+Point important : garder `.env`, `vendor`, `storage`, `database` et le code applicatif hors du dossier public `htdocs`. Seuls le front controller, les assets publics et le dossier `storage` public doivent etre exposes.
 
 ## Routes principales
 
