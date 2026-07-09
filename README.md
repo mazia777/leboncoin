@@ -161,6 +161,17 @@ QUEUE_CONNECTION=database
 CACHE_STORE=database
 ```
 
+Ne pas garder les valeurs locales suivantes sur Railway :
+
+```env
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost
+DB_CONNECTION=sqlite
+FILESYSTEM_DISK=local
+LOG_CHANNEL=stack
+```
+
 Generer `APP_KEY` en local puis copier la valeur dans les variables Railway :
 
 ```bash
@@ -179,6 +190,8 @@ DB_DATABASE=${{MySQL.MYSQLDATABASE}}
 DB_USERNAME=${{MySQL.MYSQLUSER}}
 DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 ```
+
+Si Railway a deja deploye avec SQLite, creer un service MySQL Railway, remplacer les variables ci-dessus, puis redeployer. Le script `railway/init-app.sh` refuse maintenant `DB_CONNECTION=sqlite` afin d'eviter un seed non persistant ou incoherent.
 
 Le pre-deploiement execute automatiquement :
 

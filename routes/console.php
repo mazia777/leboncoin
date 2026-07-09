@@ -29,12 +29,8 @@ Artisan::command('app:deploy-prepare {--seed-demo : Seed demo data when the data
         return 0;
     }
 
-    $databaseIsEmpty = User::query()->doesntExist()
-        && Category::query()->doesntExist()
-        && Annonce::query()->doesntExist();
-
-    if (! $databaseIsEmpty) {
-        $this->info('Demo seed skipped: database already contains application data.');
+    if (Annonce::query()->exists()) {
+        $this->info('Demo seed skipped: database already contains annonces.');
 
         return 0;
     }
