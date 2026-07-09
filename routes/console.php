@@ -10,8 +10,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Artisan::command('app:clever-deploy {--seed-demo : Seed demo data when the database is empty}', function (): int {
-    $this->info('Preparing Laravel application for Clever Cloud...');
+Artisan::command('app:deploy-prepare {--seed-demo : Seed demo data when the database is empty}', function (): int {
+    $this->info('Preparing Laravel application for production...');
 
     $this->call('migrate', [
         '--force' => true,
@@ -43,7 +43,7 @@ Artisan::command('app:clever-deploy {--seed-demo : Seed demo data when the datab
         '--force' => true,
     ]);
 
-    $this->info('Clever Cloud preparation completed.');
+    $this->info('Production preparation completed.');
 
     return 0;
-})->purpose('Run production-safe deployment tasks for Clever Cloud');
+})->purpose('Run production-safe deployment tasks');

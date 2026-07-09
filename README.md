@@ -123,12 +123,19 @@ Ouvrir ensuite :
 http://127.0.0.1:8000
 ```
 
-## Deploiement Clever Cloud
+## Deploiement Netlify
 
-Le projet contient une commande Artisan dediee au deploiement :
+Netlify est adapte aux frontends statiques, aux applications JavaScript modernes et aux fonctions serverless. Ce projet est actuellement une application Laravel avec rendu Blade, authentification, base de donnees, sessions et uploads d'images. Il ne peut donc pas etre execute directement sur Netlify comme une application PHP complete.
+
+Le plan recommande est une architecture en deux parties :
+
+- Netlify pour un futur frontend statique ou SPA ;
+- un hebergeur compatible PHP/Laravel pour le backend, la base de donnees, les sessions, les uploads et les migrations.
+
+Le backend Laravel conserve une commande de preparation production :
 
 ```bash
-php artisan app:clever-deploy --seed-demo
+php artisan app:deploy-prepare --seed-demo
 ```
 
 Cette commande :
@@ -141,41 +148,40 @@ Cette commande :
 Un script Composer est aussi disponible :
 
 ```bash
-composer clever-deploy
+composer deploy-prepare
 ```
 
-Un hook shell a ete ajoute dans :
+Pour Netlify, ne pas publier ce projet Laravel directement avec `public` comme dossier de publication : les routes Blade, l'authentification et les formulaires ne fonctionneraient pas, car Netlify ne lance pas le runtime PHP/Laravel.
 
-```text
-clevercloud/pre_run.sh
+Un fichier `netlify.toml` est present pour eviter l'erreur de build Composer liee a la version PHP. Le `composer.lock` actuel contient des dependances Symfony/Laravel qui demandent PHP `>=8.4.1`, alors que Netlify peut utiliser PHP `8.3` par defaut. La configuration force donc PHP `8.4` pendant le build :
+
+```toml
+[build.environment]
+  PHP_VERSION = "8.4"
 ```
 
-Il execute :
+Cette configuration permet de corriger l'installation des dependances pendant le build Netlify, mais elle ne rend pas Laravel executable sur Netlify en production.
 
-```bash
-php artisan app:clever-deploy --seed-demo --ansi
-```
-
-Sur Clever Cloud, configurer le hook pour qu'il s'execute avant le demarrage de l'application :
+Si un frontend separe est cree plus tard pour Netlify, il devra appeler l'API Laravel via une URL publique :
 
 ```env
-CC_PRE_RUN_HOOK=./clevercloud/pre_run.sh
+VITE_API_URL=https://api.votre-domaine.com
 ```
 
-Configurer aussi au minimum les variables suivantes :
+Le backend Laravel devra etre deploye sur un environnement PHP avec au minimum :
 
 ```env
 APP_ENV=production
 APP_DEBUG=false
 APP_KEY=base64:...
-APP_URL=https://votre-application.cleverapps.io
+APP_URL=https://api.votre-domaine.com
 FILESYSTEM_DISK=public
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 ```
 
-Configurer aussi les variables de base de donnees fournies par l'addon MySQL Clever Cloud :
+Configurer aussi les variables de base de donnees du backend :
 
 ```env
 DB_CONNECTION=mysql

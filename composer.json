@@ -50,8 +50,8 @@
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],
-        "clever-deploy": [
-            "@php artisan app:clever-deploy --seed-demo --ansi"
+        "deploy-prepare": [
+            "@php artisan app:deploy-prepare --seed-demo --ansi"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
