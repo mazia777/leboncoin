@@ -123,6 +123,71 @@ Ouvrir ensuite :
 http://127.0.0.1:8000
 ```
 
+## Deploiement Clever Cloud
+
+Le projet contient une commande Artisan dediee au deploiement :
+
+```bash
+php artisan app:clever-deploy --seed-demo
+```
+
+Cette commande :
+
+- lance les migrations avec `--force`;
+- tente de creer le lien public `storage`;
+- cree les donnees de demonstration uniquement si la base ne contient encore aucune donnee applicative;
+- evite de reseeder la base a chaque redeploiement.
+
+Un script Composer est aussi disponible :
+
+```bash
+composer clever-deploy
+```
+
+Un hook shell a ete ajoute dans :
+
+```text
+clevercloud/pre_run.sh
+```
+
+Il execute :
+
+```bash
+php artisan app:clever-deploy --seed-demo --ansi
+```
+
+Sur Clever Cloud, configurer le hook pour qu'il s'execute avant le demarrage de l'application :
+
+```env
+CC_PRE_RUN_HOOK=./clevercloud/pre_run.sh
+```
+
+Configurer aussi au minimum les variables suivantes :
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:...
+APP_URL=https://votre-application.cleverapps.io
+FILESYSTEM_DISK=public
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+```
+
+Configurer aussi les variables de base de donnees fournies par l'addon MySQL Clever Cloud :
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=...
+DB_PORT=3306
+DB_DATABASE=...
+DB_USERNAME=...
+DB_PASSWORD=...
+```
+
+Point important : les images uploadees sont stockees sur le disque local Laravel. Sur une plateforme cloud, ce stockage peut etre ephemere selon la configuration. Pour une production reelle, il faudra migrer les images vers un stockage persistant compatible S3 ou equivalent.
+
 ## Routes principales
 
 - `/` : page d'accueil.
@@ -144,4 +209,3 @@ http://127.0.0.1:8000
 ## Collaboration
 
 Nous avons structure progressivement le projet comme un MVP Leboncoin sous Laravel. La collaboration a commence par la modelisation de la base de donnees, puis l'ajout des seeders, des pages publiques, du depot d'annonce, de l'authentification personnalisee, du dashboard utilisateur et des actions de gestion des annonces. Les choix ont privilegie des changements courts, lisibles et reversibles, avec une attention particuliere a la stabilite, aux relations Eloquent, a la securite des actions utilisateur et a une interface coherente avec l'esprit marketplace du produit.
-
